@@ -56,10 +56,9 @@ int main(void)
 
     while (1)
     {
-        while (!timeout)
-            ;
-        mouse_x = byte2 & 0xFF;
-        mouse_y = byte3 & 0xFF;
+        
+        mouse_x += byte2;
+        mouse_y += byte3;
         draw_mouse_on_vga(mouse_x, mouse_y); 
 
         draw_mouse_on_vga(mouse_x, mouse_y);
