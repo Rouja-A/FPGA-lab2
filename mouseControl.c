@@ -2,14 +2,14 @@
 
 // Globals
 extern volatile unsigned char byte1, byte2, byte3;
-extern volatile int timeout;
+extern volatile int timeout, flag;
 extern struct alt_up_dev up_dev;
 
 // Function Prototypes
 void draw_mouse_on_vga(int mouse_x, int mouse_y);
 void update_button_status(int button_state);
 void clear_screen(void);
-void PS2_ISR(void *context, unsigned int id);
+void PS2_ISR(struct alt_up_dev *up_dev, unsigned int id);
 
 int main(void)
 {
@@ -24,6 +24,7 @@ int main(void)
     
     byte1 = 0; byte2 = 0; byte3 = 0;
     timeout = 0;  
+    flag = 0;
 
     int mouse_x = 128;
     int mouse_y = 128;
@@ -56,13 +57,13 @@ int main(void)
 
     while (1)
     {
-        
-        mouse_x += byte2;
-        mouse_y += byte3;
-        draw_mouse_on_vga(mouse_x, mouse_y); 
+        if(flag){
+            mouse_x += byte2;
+            mouse_y += byte3;
+            draw_mouse_on_vga(mouse_x, mouse_y); 
 
-        draw_mouse_on_vga(mouse_x, mouse_y);
-
+            flag = 0;
+        }
         int button_state = byte1 & 0x07;
         update_button_status(button_state);
 
@@ -94,16 +95,27 @@ void update_button_status(int button_state) {
 
 void PS2_ISR(struct alt_up_dev *up_dev, unsigned int id) {
     unsigned char PS2_data;
+    static int byte_count = 0;
 
     if (alt_up_ps2_read_data_byte (up_dev->PS2_dev, &PS2_data) ==0)
     {
 
-        (for int i = 0; i <=1; i++){
-            byte3 = PS2_data;
-            byte1 = byte2;
-            byte2 = byte3;
+        switch (byte_count) {
+            case 0:
+                byte1 = PS2_data;
+                byte_count++;
+                break;
+            case 1:
+                byte2 = PS2_data;
+                byte_count++;
+                break;
+            case 2:
+                byte3 = PS2_data;
+                byte_count = 0;
+                flag = 1;
+                break;
         }
-        byte3 = PS2_data;
+        
         if( (byte2 == (unsigned char) 0xAA) && (byte3 == (unsigned char) 0x00))
             (void) alt_up_ps2_write_data_byte (up_dev->PS2_dev, (unsigned char) 0xF4);
     }
