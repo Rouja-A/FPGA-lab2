@@ -58,9 +58,11 @@ int main(void)
     while (1)
     {
         if(flag){
-            mouse_x += byte2;
-            mouse_y += byte3;
-            draw_mouse_on_vga(mouse_x, mouse_y); 
+            int dx = (signed char)byte2;
+            int dy = (signed char)byte3;
+
+            mouse_x += dx;
+            mouse_y -= dy;
 
             flag = 0;
         }
