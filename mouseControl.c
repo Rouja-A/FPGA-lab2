@@ -93,10 +93,22 @@ void update_button_status(int button_state) {
     alt_up_char_buffer_string(char_buffer_dev, status, 0, 32);
 }
 
-void PS2_ISR(void *context, unsigned int id) {
-    byte1 = alt_up_ps2_read_data_byte(PS2_dev);
-    byte2 = alt_up_ps2_read_data_byte(PS2_dev);
-    byte3 = alt_up_ps2_read_data_byte(PS2_dev);
+void PS2_ISR(struct alt_up_dev *up_dev, unsigned int id) {
+    unsigned char PS2_data;
 
-    timeout = 1;
+    if (alt_up_ps2_read_data_byte (up_dev->PS2_dev, &PS2_data) ==0)
+    {
+
+        (for int i = 0; i <=1; i++){
+            byte3 = PS2_data;
+            byte1 = byte2;
+            byte2 = byte3;
+        }
+        byte3 = PS2_data;
+        if( (byte2 == (unsigned char) 0xAA) && (byte3 == (unsigned char) 0x00))
+            (void) alt_up_ps2_write_data_byte (up_dev->PS2_dev, (unsigned char) 0xF4);
+    }
+    return;
 }
+
+
